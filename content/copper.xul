@@ -484,7 +484,40 @@
 								<image class="copper-clear-button" onclick="parentNode.value='';"/>
 							</textbox>
 						</vbox>
+          </hbox>
+
+          <!--additional options-->
+          <hbox>            
+            <!--Counter-->
+            <vbox flex="1">
+              <label control="debug_option_custom_number1" value="Number1"/>
+              <textbox id="debug_option_custom_number1" emptytext="not set" style="width: 40px;" dir="reverse">
+                <image class="copper-clear-button" onclick="parentNode.value='';"/>
+              </textbox>
+            </vbox>
+            <vbox flex="1">
+              <label control="debug_option_custom_value1" value="Value1 (counter)"/>
+              <textbox id="debug_option_custom_value1" emptytext="use hex (0x..) or string" style="width: 120px;" dir="reverse" oninput="this.setAttribute('tooltiptext', Copper.str2hex(this.value));">
+                <image class="copper-clear-button" onclick="parentNode.value='';"/>
+              </textbox>
+            </vbox>
 					</hbox>
+
+          <hbox>
+            <!--Hash-->
+            <vbox flex="1">
+              <label control="debug_option_custom_number2" value="Number2"/>
+              <textbox id="debug_option_custom_number2" emptytext="not set" style="width: 40px;" dir="reverse">
+                <image class="copper-clear-button" onclick="parentNode.value='';"/>
+              </textbox>
+            </vbox>
+            <vbox flex="1">
+              <label control="debug_option_custom_value2" value="Value2 (hash)"/>
+              <textbox id="debug_option_custom_value2" emptytext="use hex (0x..) or string" style="width: 120px;" dir="reverse" oninput="this.setAttribute('tooltiptext', Copper.str2hex(this.value));">
+                <image class="copper-clear-button" onclick="parentNode.value='';"/>
+              </textbox>
+            </vbox>
+          </hbox>
 					
 				</vbox>
 			</groupbox>
