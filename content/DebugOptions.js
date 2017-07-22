@@ -243,8 +243,8 @@ Copper.checkDebugOptions = function(message) {
 			}
 
 			//new option for hash
-			if (document.getElementById('debug_option_custom_number1').value != '') {
-				message.setCustom(document.getElementById('debug_option_custom_number1').value, document.getElementById('debug_option_custom_value1').value);
+			if (document.getElementById('debug_option_custom_number2').value != '') {
+				message.setCustom(document.getElementById('debug_option_custom_number2').value, document.getElementById('debug_option_custom_value2').value);
 			}
 		}
 	} catch (ex) {
