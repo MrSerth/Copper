@@ -191,6 +191,11 @@ Copper.checkDebugOptions = function(message) {
 			if (document.getElementById('debug_option_observe').value != '') {
 				message.setObserve(parseInt(document.getElementById('debug_option_observe').value));
 			}
+
+			if (document.getElementById('debug_option_mid').value != '') {
+				message.setMID(document.getElementById('debug_option_mid').value);
+			}
+
 			if (document.getElementById('debug_option_token').value != '') {
 				message.setToken(document.getElementById('debug_option_token').value);
 			}

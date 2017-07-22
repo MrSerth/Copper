@@ -344,7 +344,12 @@
 				</caption>
 				
 				<vbox flex="1" style="overflow: auto;">
-				
+
+          <label control="debug_option_mid" value="MID" style="text-align: center;"/>
+          <textbox id="debug_option_mid" emptytext="message ID" dir="reverse" tooltiptext="Choose message id in Behavior menu">
+            <image class="copper-clear-button" onclick="parentNode.value='';"/>
+          </textbox>
+          
 					<label control="debug_option_token" value="Token" style="text-align: center;"/>
 					<textbox id="debug_option_token" emptytext="use hex (0x..) or string" dir="reverse" oninput="this.setAttribute('tooltiptext', Copper.str2hex(this.value));">
 						<image class="copper-clear-button" onclick="parentNode.value='';"/>
