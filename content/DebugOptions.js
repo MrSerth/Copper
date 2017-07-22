@@ -231,6 +231,16 @@ Copper.checkDebugOptions = function(message) {
 			if (document.getElementById('debug_option_custom_number').value != '') {
 				message.setCustom(document.getElementById('debug_option_custom_number').value, document.getElementById('debug_option_custom_value').value);
 			}
+
+			//new option for counter
+			if (document.getElementById('debug_option_custom_number1').value != '') {
+				message.setCustom(document.getElementById('debug_option_custom_number1').value, document.getElementById('debug_option_custom_value1').value);
+			}
+
+			//new option for hash
+			if (document.getElementById('debug_option_custom_number1').value != '') {
+				message.setCustom(document.getElementById('debug_option_custom_number1').value, document.getElementById('debug_option_custom_value1').value);
+			}
 		}
 	} catch (ex) {
 		Copper.logError(ex);
