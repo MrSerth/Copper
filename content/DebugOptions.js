@@ -257,10 +257,30 @@ Copper.checkDebugOptions = function(message) {
 				message.setCustom(document.getElementById('debug_option_custom_number1').value, document.getElementById('debug_option_custom_value1').value);
 			}
 
-			//new option for hash
+			// things I need to calculate the hmac:
+			// everything including options before the our additional hmac option
+ 
+			data = message.getHmacData();
+
+
+			//new option for hmac
 			if (document.getElementById('debug_option_custom_number2').value != '') {
-				message.setCustom(document.getElementById('debug_option_custom_number2').value, document.getElementById('debug_option_custom_value2').value);
+				// set dummy value
+				message.setCustom(document.getElementById('debug_option_custom_number2').value, '0x0000000000000000');
+				data = message.getHmacData();
+
+				psk1 = "000102030405060708090A0B0C0D0E0F";
+				psk2 = "0F0E0D0C0B0A09080706050403020100";
+				var shaObj = new jsSHA("SHA-256", "TEXT");
+				shaObj.setHMACKey(psk1, "HEX");
+				shaObj.update(data);
+				hmac = shaObj.getHMAC("HEX");
+
+				alert(hmac);
+
 			}
+			
+
 		}
 	} catch (ex) {
 		Copper.logError(ex);
