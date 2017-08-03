@@ -81,6 +81,12 @@ Copper.loadDebugOptions = function() {
 	
 	document.getElementById('debug_option_custom_number').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-number');
 	document.getElementById('debug_option_custom_value').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-value');
+
+	document.getElementById('debug_option_mid').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.mid');
+	document.getElementById('debug_option_custom_number1').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-number1');
+	document.getElementById('debug_option_custom_value1').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-value1');
+	document.getElementById('debug_option_custom_number2').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-number2');
+	document.getElementById('debug_option_custom_value2').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-value2');
 };
 
 Copper.saveDebugOptions = function() {
@@ -107,6 +113,15 @@ Copper.saveDebugOptions = function() {
 
 	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-number', document.getElementById('debug_option_custom_number').value);
 	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-value', document.getElementById('debug_option_custom_value').value);
+
+
+	Copper.prefManager.setCharPref('extensions.copper.debug.options.mid', document.getElementById('debug_option_mid').value);
+
+	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-number1', document.getElementById('debug_option_custom_number1').value);
+	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-value1', document.getElementById('debug_option_custom_value1').value);
+
+	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-number2', document.getElementById('debug_option_custom_number2').value);
+	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-value2', document.getElementById('debug_option_custom_value2').value);
 };
 
 Copper.resetDebugOptions = function() {
