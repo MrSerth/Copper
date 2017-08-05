@@ -78,15 +78,18 @@ Copper.loadDebugOptions = function() {
 	document.getElementById('debug_option_size1').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.size1');
 	document.getElementById('chk_debug_option_block_auto').checked = Copper.prefManager.getBoolPref('extensions.copper.debug.options.block-auto');
 	document.getElementById('debug_option_if_none_match').checked = Copper.prefManager.getBoolPref('extensions.copper.debug.options.if-none-match');
-	
-	document.getElementById('debug_option_custom_number').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-number');
-	document.getElementById('debug_option_custom_value').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-value');
-
+		
 	document.getElementById('debug_option_mid').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.mid');
-	document.getElementById('debug_option_custom_number1').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-number1');
-	document.getElementById('debug_option_custom_value1').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-value1');
-	document.getElementById('debug_option_custom_number2').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-number2');
-	document.getElementById('debug_option_custom_value2').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.custom-value2');
+    document.getElementById('debug_option_client_id_number').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.client-id-number');
+    document.getElementById('debug_option_client_id_value').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.client-id-value');
+    document.getElementById('debug_option_boot_counter_number').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.boot-counter-number');
+    document.getElementById('debug_option_boot_counter_value').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.boot-counter-value');
+    document.getElementById('debug_option_retransmission_counter_number').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.retransmission-counter-number');
+    document.getElementById('debug_option_retransmission_counter_value').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.retransmission-counter-value');
+    document.getElementById('debug_option_hmac_number').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.hmac-number');
+    document.getElementById('debug_option_hmac_value').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.hmac-value');
+    document.getElementById('debug_option_encryption_algorithm_number').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.encryption-algorithm-number');
+    document.getElementById('debug_option_encryption_algorithm_value').value = Copper.prefManager.getCharPref('extensions.copper.debug.options.encryption-algorithm-value');
 };
 
 Copper.saveDebugOptions = function() {
@@ -111,17 +114,17 @@ Copper.saveDebugOptions = function() {
 	Copper.prefManager.setBoolPref('extensions.copper.debug.options.block-auto', document.getElementById('chk_debug_option_block_auto').checked);
 	Copper.prefManager.setBoolPref('extensions.copper.debug.options.if-none-match', document.getElementById('debug_option_if_none_match').checked);
 
-	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-number', document.getElementById('debug_option_custom_number').value);
-	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-value', document.getElementById('debug_option_custom_value').value);
-
-
 	Copper.prefManager.setCharPref('extensions.copper.debug.options.mid', document.getElementById('debug_option_mid').value);
-
-	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-number1', document.getElementById('debug_option_custom_number1').value);
-	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-value1', document.getElementById('debug_option_custom_value1').value);
-
-	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-number2', document.getElementById('debug_option_custom_number2').value);
-	Copper.prefManager.setCharPref('extensions.copper.debug.options.custom-value2', document.getElementById('debug_option_custom_value2').value);
+    Copper.prefManager.setCharPref('extensions.copper.debug.options.client-id-number', document.getElementById('debug_option_client_id_number').value);
+    Copper.prefManager.setCharPref('extensions.copper.debug.options.client-id-value', document.getElementById('debug_option_client_id_value').value);
+    Copper.prefManager.setCharPref('extensions.copper.debug.options.boot-counter-number', document.getElementById('debug_option_boot_counter_number').value);
+    Copper.prefManager.setCharPref('extensions.copper.debug.options.boot-counter-value', document.getElementById('debug_option_boot_counter_value').value);
+    Copper.prefManager.setCharPref('extensions.copper.debug.options.retransmission-counter-number', document.getElementById('debug_option_retransmission_counter_number').value);
+    Copper.prefManager.setCharPref('extensions.copper.debug.options.retransmission-counter-value', document.getElementById('debug_option_retransmission_counter_value').value);
+    Copper.prefManager.setCharPref('extensions.copper.debug.options.hmac-number', document.getElementById('debug_option_hmac_number').value);
+    Copper.prefManager.setCharPref('extensions.copper.debug.options.hmac-value', document.getElementById('debug_option_hmac_value').value);
+    Copper.prefManager.setCharPref('extensions.copper.debug.options.encryption-algorithm-number', document.getElementById('debug_option_encryption_algorithm_number').value);
+    Copper.prefManager.setCharPref('extensions.copper.debug.options.encryption-algorithm-value', document.getElementById('debug_option_encryption_algorithm_value').value);
 };
 
 Copper.resetDebugOptions = function() {
@@ -247,39 +250,51 @@ Copper.checkDebugOptions = function(message) {
 			if (Copper.OPTION_IF_NONE_MATCH && document.getElementById('debug_option_if_none_match').checked) {
 				message.setIfNoneMatch();
 			}
-
-			if (document.getElementById('debug_option_custom_number').value != '') {
-				message.setCustom(document.getElementById('debug_option_custom_number').value, document.getElementById('debug_option_custom_value').value);
+			
+			// Client identity
+			if (document.getElementById('debug_option_client_id_number').value != '') {
+				message.setCustom(document.getElementById('debug_option_client_id_number').value, document.getElementById('debug_option_client_id_value').value);
+			}
+            
+			//Boot Counter
+			if (document.getElementById('debug_option_boot_counter_number').value != '') {
+				message.setCustom(document.getElementById('debug_option_boot_counter_number').value, document.getElementById('debug_option_boot_counter_value').value);
 			}
 
-			//new option for counter
-			if (document.getElementById('debug_option_custom_number1').value != '') {
-				message.setCustom(document.getElementById('debug_option_custom_number1').value, document.getElementById('debug_option_custom_value1').value);
+			//Retransmission Counter
+			if (document.getElementById('debug_option_retransmission_counter_number').value != '') {
+				message.setCustom(document.getElementById('debug_option_retransmission_counter_number').value, document.getElementById('debug_option_retransmission_counter_value').value);
 			}
 
-			// things I need to calculate the hmac:
-			// everything including options before the our additional hmac option
- 
-			data = message.getHmacData();
+			//HMAC (first run: setting empty HMAC (32B) so that all necessary values are set for later real calculation of HMAC)
+			if (document.getElementById('debug_option_hmac_number').value != '') {
+				message.setCustom(document.getElementById('debug_option_hmac_number').value, "0x0000000000000000000000000000000000000000000000000000000000000000");
+			}
 
+			//Encryption Algorithm
+			if (document.getElementById('debug_option_encryption_algorithm_number').value != '') {
+				message.setCustom(document.getElementById('debug_option_encryption_algorithm_number').value, document.getElementById('debug_option_encryption_algorithm_value').value);
+			}
 
-			//new option for hmac
-			if (document.getElementById('debug_option_custom_number2').value != '') {
-				// set dummy value
-				message.setCustom(document.getElementById('debug_option_custom_number2').value, '0x0000000000000000');
+			
+			//HMAC (second run: actually calculating HMAC and setting the proper value)
+			if (document.getElementById('debug_option_hmac_number').value != '') {
+				
+				// calculate HMAC:
+				
 				data = message.getHmacData();
-
 				psk1 = "000102030405060708090A0B0C0D0E0F";
 				psk2 = "0F0E0D0C0B0A09080706050403020100";
-				var shaObj = new jsSHA("SHA-256", "TEXT");
+				input = "6045ace5c128b171e1fcc40111011101181101ffaa947b2b8169d5665473d6a3f3eed22a";
+				var shaObj = new jsSHA("SHA-256", "HEX");
 				shaObj.setHMACKey(psk1, "HEX");
-				shaObj.update(data);
+				shaObj.update(input);
 				hmac = shaObj.getHMAC("HEX");
 
 				alert(hmac);
 
+				message.setCustom(document.getElementById('debug_option_hmac_number').value, hmac);
 			}
-			
 
 		}
 	} catch (ex) {

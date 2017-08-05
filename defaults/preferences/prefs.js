@@ -70,11 +70,18 @@ pref("extensions.copper.debug.options.if-none-match", false);
 pref("extensions.copper.debug.options.custom-number", "");
 pref("extensions.copper.debug.options.custom-value", "");
 
+
 pref("extensions.copper.debug.options.mid", "");
-pref("extensions.copper.debug.options.custom-number1", "");
-pref("extensions.copper.debug.options.custom-value1", "");
-pref("extensions.copper.debug.options.custom-number2", "");
-pref("extensions.copper.debug.options.custom-value2", "");
+pref("extensions.copper.debug.options.client-id-number", "");
+pref("extensions.copper.debug.options.client-id-value", "");
+pref("extensions.copper.debug.options.boot-counter-number", "");
+pref("extensions.copper.debug.options.boot-counter-value", "");
+pref("extensions.copper.debug.options.retransmission-counter-number", "");
+pref("extensions.copper.debug.options.retransmission-counter-value", "");
+pref("extensions.copper.debug.options.hmac-number", "");
+pref("extensions.copper.debug.options.hmac-value", "");
+pref("extensions.copper.debug.options.encryption-algorithm-number", "");
+pref("extensions.copper.debug.options.encryption-algorithm-value", "");
 
 pref("extensions.copper.plugtest.menu", false);
 pref("extensions.copper.plugtest.proxy", false);

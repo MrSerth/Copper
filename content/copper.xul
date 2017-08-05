@@ -478,52 +478,86 @@
 					</textbox>
 						</vbox>
 					</hbox>
-					
+				
+          
 					<label value="Custom Options" style="text-align: center; margin-top: 5px;"/>
-					
-					<hbox>
-						<vbox flex="1">
-							<label control="debug_option_custom_number" value="Number"/>
-							<textbox id="debug_option_custom_number" emptytext="not set" style="width: 40px;" dir="reverse">
-								<image class="copper-clear-button" onclick="parentNode.value='';"/>
-							</textbox>
-						</vbox>
-						<vbox flex="1">
-							<label control="debug_option_custom_value" value="Value"/>
-							<textbox id="debug_option_custom_value" emptytext="use hex (0x..) or string" style="width: 120px;" dir="reverse" oninput="this.setAttribute('tooltiptext', Copper.str2hex(this.value));">
-								<image class="copper-clear-button" onclick="parentNode.value='';"/>
-							</textbox>
-						</vbox>
+				
+          <!--additional options for en-route filtering-->
+          <hbox>
+            <!--Client Identity (PSK)-->
+            <vbox flex="1">
+              <label control="debug_option_client_id_number" value="Number"/>
+              <textbox id="debug_option_client_id_number" emptytext="65000" style="width: 40px;" dir="reverse">
+                <image class="copper-clear-button" onclick="parentNode.value='';"/>
+              </textbox>
+            </vbox>
+            <vbox flex="1">
+              <label control="debug_option_client_id_value" value="Client ID (1B)"/>
+              <textbox id="debug_option_client_id_value" emptytext="use hex (0x..) or string" style="width: 120px;" dir="reverse" oninput="this.setAttribute('tooltiptext', Copper.str2hex(this.value));">
+                <image class="copper-clear-button" onclick="parentNode.value='';"/>
+              </textbox>
+            </vbox>
           </hbox>
 
-          <!--additional options-->
-          <hbox>            
-            <!--Counter-->
+          <hbox>
+            <!--Boot Counter-->
             <vbox flex="1">
-              <label control="debug_option_custom_number1" value="Number1"/>
-              <textbox id="debug_option_custom_number1" emptytext="not set" style="width: 40px;" dir="reverse">
+              <label control="debug_option_boot_counter_number" value="Number"/>
+              <textbox id="debug_option_boot_counter_number" emptytext="65001" style="width: 40px;" dir="reverse">
                 <image class="copper-clear-button" onclick="parentNode.value='';"/>
               </textbox>
             </vbox>
             <vbox flex="1">
-              <label control="debug_option_custom_value1" value="Value1 (counter)"/>
-              <textbox id="debug_option_custom_value1" emptytext="use hex (0x..) or string" style="width: 120px;" dir="reverse" oninput="this.setAttribute('tooltiptext', Copper.str2hex(this.value));">
+              <label control="debug_option_boot_counter_value" value="Boot Counter (2B)"/>
+              <textbox id="debug_option_boot_counter_value" emptytext="use hex (0x..) or string" style="width: 120px;" dir="reverse" oninput="this.setAttribute('tooltiptext', Copper.str2hex(this.value));">
                 <image class="copper-clear-button" onclick="parentNode.value='';"/>
               </textbox>
             </vbox>
-					</hbox>
+          </hbox>
 
           <hbox>
-            <!--Hash-->
+            <!--Retransmission Counter-->
             <vbox flex="1">
-              <label control="debug_option_custom_number2" value="Number2"/>
-              <textbox id="debug_option_custom_number2" emptytext="not set" style="width: 40px;" dir="reverse">
+              <label control="debug_option_retransmission_counter_number" value="Number"/>
+              <textbox id="debug_option_retransmission_counter_number" emptytext="65002" style="width: 40px;" dir="reverse">
                 <image class="copper-clear-button" onclick="parentNode.value='';"/>
               </textbox>
             </vbox>
             <vbox flex="1">
-              <label control="debug_option_custom_value2" value="Value2 (hash)"/>
-              <textbox id="debug_option_custom_value2" emptytext="use hex (0x..) or string" style="width: 120px;" dir="reverse" oninput="this.setAttribute('tooltiptext', Copper.str2hex(this.value));">
+              <label control="debug_option_retransmission_counter_value" value="Retransmission Counter (1B)"/>
+              <textbox id="debug_option_retransmission_counter_value" emptytext="use hex (0x..) or string" style="width: 120px;" dir="reverse" oninput="this.setAttribute('tooltiptext', Copper.str2hex(this.value));">
+                <image class="copper-clear-button" onclick="parentNode.value='';"/>
+              </textbox>
+            </vbox>
+          </hbox>
+
+          <hbox>
+            <!--HMAC-->
+            <vbox flex="1">
+              <label control="debug_option_hmac_number" value="Number"/>
+              <textbox id="debug_option_hmac_number" emptytext="65003" style="width: 40px;" dir="reverse">
+                <image class="copper-clear-button" onclick="parentNode.value='';"/>
+              </textbox>
+            </vbox>
+            <vbox flex="1">
+              <label control="debug_option_hmac_value" value="HMAC (32B)"/>
+              <textbox id="debug_option_hmac_value" emptytext="will be calculated.." style="width: 120px;" dir="reverse" oninput="this.setAttribute('tooltiptext', Copper.str2hex(this.value));">
+                <image class="copper-clear-button" onclick="parentNode.value='';"/>
+              </textbox>
+            </vbox>
+          </hbox>
+
+          <hbox>
+            <!--Encryption Algorithm-->
+            <vbox flex="1">
+              <label control="debug_option_encryption_algorithm_number" value="Number"/>
+              <textbox id="debug_option_encryption_algorithm_number" emptytext="65004" style="width: 40px;" dir="reverse">
+                <image class="copper-clear-button" onclick="parentNode.value='';"/>
+              </textbox>
+            </vbox>
+            <vbox flex="1">
+              <label control="debug_option_encryption_algorithm_value" value="Encr. Alg. (1B)"/>
+              <textbox id="debug_option_encryption_algorithm_value" emptytext="use hex (0x..) or string" style="width: 120px;" dir="reverse" oninput="this.setAttribute('tooltiptext', Copper.str2hex(this.value));">
                 <image class="copper-clear-button" onclick="parentNode.value='';"/>
               </textbox>
             </vbox>
@@ -551,7 +585,7 @@
 				<listheader label="CoAP Message" style="width: 10em;" />
 				<listheader label="MID" style="width: 4.5em;" />
 				<listheader label="Token" style="width: 6em;" />
-				<listheader label="Options" />
+				<listheader label="Options" style="width: 19em"/>
 				<listheader label="Payload" />
 			</listhead>
 			<listcols>
