@@ -266,7 +266,7 @@ Copper.checkDebugOptions = function(message) {
 				message.setCustom(document.getElementById('debug_option_retransmission_counter_number').value, document.getElementById('debug_option_retransmission_counter_value').value);
 			}
 
-			//HMAC (first run: setting empty HMAC (32B) so that all necessary values are set for later real calculation of HMAC)
+			//HMAC (first run: setting empty HMAC (32B) so that all necessary values are set for later (in send function) real calculation of HMAC)
 			if (document.getElementById('debug_option_hmac_number').value != '') {
 				message.setCustom(document.getElementById('debug_option_hmac_number').value, "0x0000000000000000000000000000000000000000000000000000000000000000");
 			}
@@ -274,26 +274,6 @@ Copper.checkDebugOptions = function(message) {
 			//Encryption Algorithm
 			if (document.getElementById('debug_option_encryption_algorithm_number').value != '') {
 				message.setCustom(document.getElementById('debug_option_encryption_algorithm_number').value, document.getElementById('debug_option_encryption_algorithm_value').value);
-			}
-
-			
-			//HMAC (second run: actually calculating HMAC and setting the proper value)
-			if (document.getElementById('debug_option_hmac_number').value != '') {
-				
-				// calculate HMAC:
-				
-				data = message.getHmacData();
-				psk1 = "000102030405060708090A0B0C0D0E0F";
-				psk2 = "0F0E0D0C0B0A09080706050403020100";
-				input = "6045ace5c128b171e1fcc40111011101181101ffaa947b2b8169d5665473d6a3f3eed22a";
-				var shaObj = new jsSHA("SHA-256", "HEX");
-				shaObj.setHMACKey(psk1, "HEX");
-				shaObj.update(input);
-				hmac = shaObj.getHMAC("HEX");
-
-				alert(hmac);
-
-				message.setCustom(document.getElementById('debug_option_hmac_number').value, hmac);
 			}
 
 		}
