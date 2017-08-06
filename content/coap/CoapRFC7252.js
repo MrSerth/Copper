@@ -355,20 +355,6 @@ Copper.serialize = function(message) {
     // payload
     packet += Copper.bytes2data(message.payload);
 
-    // transform packet to HEX
-    packetBytes = Copper.data2bytes(packet);
-    packetHex = packetBytes.map(function (x) {
-        // reformat to hex and make sure there are always 2 digits
-        return x >= 10 ? x.toString(16).toLowerCase() : "0" + x.toString(16).toLowerCase();
-    });
-
-    // make string out of hex array
-    result = packetHex.reduce(function (a, b) {
-        a += b;
-        return a;
-    });
-    alert("reserialized hex string: " + result);
-
     // finished
     return packet;
 };
@@ -483,7 +469,8 @@ Copper.serializeWithoutHMAC = function (message) {
     packetBytes = Copper.data2bytes(packet);
     packetHex = packetBytes.map(function (x) {
         // reformat to hex and make sure there are always 2 digits
-        return x >= 10 ? x.toString(16).toLowerCase() : "0" + x.toString(16).toLowerCase();
+        hexValue = x.toString(16).toLowerCase();
+        return hexValue.length == 2 ? hexValue : "0" + hexValue;
     });
 
     // make string out of hex array
