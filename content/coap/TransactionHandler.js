@@ -187,7 +187,25 @@ Copper.TransactionHandler.prototype = {
 		}
 
 		Copper.logMessage(message, true);
-		
+
+        // calc HMAC now, that the message is complete
+        packetHex = Copper.serializeWithoutHMAC(message);
+
+        alert("input for HMAC: " + packetHex);
+        psk1 = "000102030405060708090A0B0C0D0E0F";
+        psk2 = "0F0E0D0C0B0A09080706050403020100";
+        //input = "6045ace5c128b171e1fcc40111011101181101ffaa947b2b8169d5665473d6a3f3eed22a";
+        var shaObj = new jsSHA("SHA-256", "HEX");
+        shaObj.setHMACKey(psk1, "HEX");
+        shaObj.update(packetHex);
+        hmac = shaObj.getHMAC("HEX");
+
+        alert("HMAC output: \n" + hmac);
+        
+        // replace dummy hmac with actual value (add 0x to make sure it's interpreted as hex-value)
+        message.setCustom(document.getElementById('debug_option_hmac_number').value, "0x"+hmac);
+        
+        // reserialize message now with new hmac
 		this.client.send( Copper.serialize(message) );
 	},
 	

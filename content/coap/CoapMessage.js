@@ -97,32 +97,7 @@ Copper.CoapMessage.prototype = {
 			}
 		}
 		return ret;
-	},
-
-	// data which will be hashed using HMAC
-	getHmacData : function() {
-		let data = ''; 
-		data += this.version; // is this correct? maybe Copper.VERSION works better 
-		data += this.getType(true); 
-		// Token length? 
-		// Copper.TOKEN_LENGTH;
- 		data += this.token.length;
- 		data += this.getCode(true);
- 		data += this.getMID();
- 		data += this.getToken();
- 		if (Object.keys(this.options).length > 0) {
- 			// unless its option 50003 or something with the hmac 
- 			// ... well but in copper there is no hmac yet so maybe this is sufficient
-			// !!! but i will need also the option delta of the not yet existing hmac...
- 			data += this.getOptions(true);
- 		}
-
- 
-     // TODO: convert to hex 
-	 alert(data);
-     return data;
-	},
- 
+	}, 
 	
 	// readable type
 	getType : function(readable) {
@@ -209,7 +184,7 @@ Copper.CoapMessage.prototype = {
 		
 		delete this.token;
 		this.token = token;
-	},
+    },
 	
 	// readable options list
 	getOptions : function(asString) {
@@ -305,7 +280,8 @@ Copper.CoapMessage.prototype = {
 		} else {
 			return -1;
 		}
-	},
+    },
+
 	getOption : function(optNumber) {
 		var opt = this.options[optNumber][1];
 		

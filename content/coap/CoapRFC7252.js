@@ -347,13 +347,150 @@ Copper.serialize = function(message) {
     
     // payload
     packet += Copper.bytes2data(message.payload);
-    
+
+    // transform packet to HEX
+    packetBytes = Copper.data2bytes(packet);
+    packetHex = packetBytes.map(function (x) {
+        // reformat to hex and make sure there are always 2 digits
+        return x >= 10 ? x.toString(16).toLowerCase() : "0" + x.toString(16).toLowerCase();
+    });
+
+    // make string out of hex array
+    result = packetHex.reduce(function (a, b) {
+        a += b;
+        return a;
+    });
+    alert("reserialized hex string: " + result);
+
     // finished
     return packet;
 };
+
+Copper.serializeWithoutHMAC = function (message) {
+    let byteArray = new Array();
+    let tempByte = 0x00;
+
+    // first byte: version, type, and token length
+    tempByte = (0x03 & Copper.VERSION) << 6; // using const for sending packets
+    tempByte |= (0x03 & message.type) << 4;
+    tempByte |= (0x0F & message.token.length);
+
+    byteArray.push(tempByte);
+
+    // second byte: method or response code
+    byteArray.push(0xFF & message.code);
+
+    // third and forth byte: message ID (MID)
+    byteArray.push(0xFF & (message.mid >>> 8));
+    byteArray.push(0xFF & message.mid);
+
+    for (let i in message.token) {
+        byteArray.push(0xFF & message.token[i]);
+    }
+
+    // options
+    message.optionCount = 0;
+    let optNumber = 0;
+
+    for (let optTypeIt in message.options) {
+
+        if (!Array.isArray(message.options[optTypeIt][1])) {
+            continue;
+        } else {
+
+            Copper.logEvent("SERIALIZE: Option " + Copper.getOptionName(optTypeIt));
+            skipValue = false;
+            if (Copper.getOptionName(optTypeIt) == "Unknown 65003") {
+                Copper.logEvent("now at option 65003");
+                skipValue = true;
+            }
+            
+            let splitOption = new Array();
+            if (optTypeIt == Copper.OPTION_LOCATION_PATH ||
+                optTypeIt == Copper.OPTION_LOCATION_QUERY ||
+                optTypeIt == Copper.OPTION_URI_PATH ||
+                optTypeIt == Copper.OPTION_URI_QUERY) {
+
+                let separator = '/'; // 0x002F
+                if (optTypeIt == Copper.OPTION_LOCATION_QUERY || optTypeIt == Copper.OPTION_URI_QUERY) {
+                    separator = '&'; // 0x0026
+                }
+
+                if (Copper.bytes2str(message.options[optTypeIt][1]) != "") {
+                    let splitString = Copper.bytes2str(message.options[optTypeIt][1]).split(separator);
+                    for (let s in splitString) {
+                        splitOption.push(Copper.str2bytes(splitString[s]));
+                    }
+                }
+            } else {
+                splitOption.push(message.options[optTypeIt][1]);
+            }
+
+            while ((opt = splitOption.shift())) {
+
+                let optDelta = optTypeIt - optNumber;
+
+                let delta = Copper.optionNibble(optDelta);
+                let len = Copper.optionNibble(opt.length);
+
+                byteArray.push(0xFF & (delta << 4 | len));
+
+                if (delta == 13) {
+                    byteArray.push(optDelta - 13);
+                } else if (delta == 14) {
+                    byteArray.push((optDelta - 269) >>> 8);
+                    byteArray.push(0xFF & (optDelta - 269));
+                }
+                if (len == 13) {
+                    byteArray.push(opt.length - 13);
+                } else if (len == 14) {
+                    byteArray.push((opt.length) >>> 8);
+                    byteArray.push(0xFF & (opt.length - 269));
+                }
+
+                // add option value
+                if (!skipValue) {
+                    Copper.logEvent("adding option Value");
+                    for (let i in opt) byteArray.push(opt[i]);
+                }
+
+                message.optionCount++;
+
+                optNumber = optTypeIt;
+            }
+        }
+    }
+
+    // option terminator
+    if (message.payload.length > 0) {
+        byteArray.push(0xFF);
+    }
+
+    // serialize as string
+    let packet = Copper.bytes2data(byteArray);
+
+    // payload
+    packet += Copper.bytes2data(message.payload);
+
+    // transform packet to HEX
+    packetBytes = Copper.data2bytes(packet);
+    packetHex = packetBytes.map(function (x) {
+        // reformat to hex and make sure there are always 2 digits
+        return x >= 10 ? x.toString(16).toLowerCase() : "0" + x.toString(16).toLowerCase();
+    });
+
+    // make string out of hex array
+    result = packetHex.reduce(function (a, b) {
+        a += b;
+        return a;
+    });
+    
+    // finished
+    return result;
+};
 	
 Copper.parse = function(packet) {
-	
+    
 	Copper.logEvent('PACKET (hex): ' + packet.map(function(x){return x.toString(16).toUpperCase();}));
 	
 	// first byte: version, type, and option count
