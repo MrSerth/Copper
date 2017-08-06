@@ -267,8 +267,11 @@ Copper.checkDebugOptions = function(message) {
 			}
 
 			//HMAC (first run: setting empty HMAC (32B) so that all necessary values are set for later (in send function) real calculation of HMAC)
-			if (document.getElementById('debug_option_hmac_number').value != '') {
-				message.setCustom(document.getElementById('debug_option_hmac_number').value, "0x0000000000000000000000000000000000000000000000000000000000000000");
+            if (document.getElementById('debug_option_hmac_number').value != '') {
+                //long version (whole 32 B)
+                //message.setCustom(document.getElementById('debug_option_hmac_number').value, "0x0000000000000000000000000000000000000000000000000000000000000000");
+                // short version (only 8 B)
+                message.setCustom(document.getElementById('debug_option_hmac_number').value, "0x0000000000000000");
 			}
 
 			//Encryption Algorithm
