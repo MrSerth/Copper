@@ -488,6 +488,9 @@ Copper.parse = function(packet) {
 		throw new Error('Cannot parse CoAP version '+version);
     }
 
+    // if payload encrypted: decryption necessary
+    let payloadIsEncrypted = false;
+
 	// create the message
 	var message = new Copper.CoapMessage( 0x03 & ((tempByte) >>> 4), packet.shift() );
     
@@ -524,13 +527,20 @@ Copper.parse = function(packet) {
 				optLen += 0xFF & packet.shift();
 			}
 			
-			optNumber += optDelta;
-			
+            optNumber += optDelta;
+            			
 			let opt = new Array(0);
 	    	
 		    for (let j=0; j<optLen; j++) {
 		    	opt.push(packet.shift());
-		    }
+            }
+
+            Copper.logEvent('opt number: ' + optNumber + 'opt value: ' + opt);
+            if (optNumber == 65004 && opt == 1) {
+                // TODO: test that this branch is taken
+                Copper.logEvent("now encryption option with value 1 found.");
+                payloadIsEncrypted = true;
+            }
 		    
 			Copper.logEvent('PARSE: Option '+Copper.getOptionName(optNumber) + " = " + opt);
 	    	
@@ -553,11 +563,22 @@ Copper.parse = function(packet) {
 			
 			message.options[optNumber] = new Array(optLen, opt);
 	    	
-		} else {
-			message.payload = packet;
+        } else {
+            alert("now finding payload");
+            if (!payloadIsEncrypted) {
+                alert("payload not encrypted");
+                message.payload = packet;
+            } else {
+                alert("payload encrypted");
+                // TODO: test that this branch is being taken
+                // decrypt payload:
+                message.payload = Copper.decryptPayload(packet);
+            }
+			
 			break;
 		}
-	}
+    }
+    //Copper.decryptPayload("hallo");
 	
 	return message;
 };
@@ -565,6 +586,42 @@ Copper.parse = function(packet) {
 
 //Protocol helper functions
 ////////////////////////////////////////////////////////////////////////////////
+
+Copper.decryptPayload = function (payload) {
+    // 128-bit keys
+    var psk1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+    var psk2 = [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+
+    // Convert text to bytes
+    // we already have bytes:
+    // TODO: test if this is actually in the format that I want it to be
+    alert("payload: " + payload);
+    var textBytes = payload; 
+    //var text = 'TextMustBe16Byte';
+    //var textBytes = aesjs.utils.utf8.toBytes(text);
+
+    var aesEcb = new aesjs.ModeOfOperation.ecb(psk1);
+    var encryptedBytes = aesEcb.encrypt(textBytes);
+
+    // To print or store the binary data, you may convert it to hex
+    var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes);
+    alert("encryptedHex: " + encryptedHex);
+    // "a7d93b35368519fac347498dec18b458"
+
+    // When ready to decrypt the hex string, convert it back to bytes
+    var encryptedBytes = aesjs.utils.hex.toBytes(encryptedHex);
+
+    // Since electronic codebook does not store state, we can
+    // reuse the same instance.
+    //var aesEcb = new aesjs.ModeOfOperation.ecb(key);
+    var decryptedBytes = aesEcb.decrypt(encryptedBytes);
+
+    // Convert our bytes back into text
+    var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
+    alert("decrypted text: " + decryptedText);
+    // "TextMustBe16Byte"
+    
+};
 	
 Copper.optionNibble = function(value) {
 	if (value < 13) {
