@@ -279,40 +279,10 @@ Copper.checkDebugOptions = function(message) {
                 message.setCustom(document.getElementById('debug_option_encryption_algorithm_number').value, document.getElementById('debug_option_encryption_algorithm_value').value);
 
                 // encrypt payload:
-
+								// TODO
                 // set new payload
 
             }
-            // Start AES ECB encryption test
-            // An example 128-bit key
-            var key = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-
-            // Convert text to bytes
-            var text = 'TextMustBe16Byte';
-            var textBytes = aesjs.utils.utf8.toBytes(text);
-
-            var aesEcb = new aesjs.ModeOfOperation.ecb(key);
-            var encryptedBytes = aesEcb.encrypt(textBytes);
-
-            // To print or store the binary data, you may convert it to hex
-            var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes);
-            alert(encryptedHex);
-            // "a7d93b35368519fac347498dec18b458"
-
-            // When ready to decrypt the hex string, convert it back to bytes
-            var encryptedBytes = aesjs.utils.hex.toBytes(encryptedHex);
-
-            // Since electronic codebook does not store state, we can
-            // reuse the same instance.
-            //var aesEcb = new aesjs.ModeOfOperation.ecb(key);
-            var decryptedBytes = aesEcb.decrypt(encryptedBytes);
-
-            // Convert our bytes back into text
-            var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
-            alert(decryptedText);
-            // "TextMustBe16Byte"
-
-            // End AES ECB encryption test
 
 		}
 	} catch (ex) {
