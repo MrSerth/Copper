@@ -534,10 +534,8 @@ Copper.parse = function(packet) {
 		    for (let j=0; j<optLen; j++) {
 		    	opt.push(packet.shift());
             }
-
-            Copper.logEvent('opt number: ' + optNumber + 'opt value: ' + opt);
+           
             if (optNumber == 65004 && opt == 1) {
-                // TODO: test that this branch is taken
                 Copper.logEvent("now encryption option with value 1 found.");
                 payloadIsEncrypted = true;
             }
@@ -564,21 +562,25 @@ Copper.parse = function(packet) {
 			message.options[optNumber] = new Array(optLen, opt);
 	    	
         } else {
-            alert("now finding payload");
+            //alert("now finding payload");
+            //payload = [82, 95, 115, 234, 24, 253, 210, 78, 162, 189, 148, 103, 42, 42, 99, 53];
+            //decrypted = Copper.decryptPayload(payload);
             if (!payloadIsEncrypted) {
                 alert("payload not encrypted");
+                alert("payload written to message: " + payload);
                 message.payload = packet;
             } else {
                 alert("payload encrypted");
-                // TODO: test that this branch is being taken
                 // decrypt payload:
-                message.payload = Copper.decryptPayload(packet);
+                payload = Copper.decryptPayload(packet);
+                alert("payload written to message: " + payload);
+                message.payload = payload;
             }
+            message.payload = decrypted;
 			
 			break;
 		}
     }
-    //Copper.decryptPayload("hallo");
 	
 	return message;
 };
@@ -594,33 +596,43 @@ Copper.decryptPayload = function (payload) {
 
     // Convert text to bytes
     // we already have bytes:
-    // TODO: test if this is actually in the format that I want it to be
     alert("payload: " + payload);
-    var textBytes = payload; 
-    //var text = 'TextMustBe16Byte';
-    //var textBytes = aesjs.utils.utf8.toBytes(text);
+    var encryptedBytes = payload; 
 
     var aesEcb = new aesjs.ModeOfOperation.ecb(psk1);
-    var encryptedBytes = aesEcb.encrypt(textBytes);
-
-    // To print or store the binary data, you may convert it to hex
-    var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes);
-    alert("encryptedHex: " + encryptedHex);
-    // "a7d93b35368519fac347498dec18b458"
-
-    // When ready to decrypt the hex string, convert it back to bytes
-    var encryptedBytes = aesjs.utils.hex.toBytes(encryptedHex);
-
-    // Since electronic codebook does not store state, we can
-    // reuse the same instance.
-    //var aesEcb = new aesjs.ModeOfOperation.ecb(key);
     var decryptedBytes = aesEcb.decrypt(encryptedBytes);
 
     // Convert our bytes back into text
     var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
     alert("decrypted text: " + decryptedText);
-    // "TextMustBe16Byte"
+
+    decryptedUnpaddedPayload = Copper.removePadding(decryptedBytes);
+    var decryptedText = aesjs.utils.utf8.fromBytes(decryptedUnpaddedPayload);
+    alert("decrypted text w/o padding: " + decryptedText);
+
+    return decryptedUnpaddedPayload;
     
+};
+
+Copper.removePadding = function (payload) {
+    var paddingLength = payload[payload.length - 1];
+
+    // Check for correct padding
+    var decryptionPaddingError = false;
+    
+    for (var i = paddingLength; i > 0; --i) {
+        if (payload[payload.length - i] != paddingLength) {
+            decryptionPaddingError |= true;
+        }
+    }
+
+    if (decryptionPaddingError) {
+        return -1;
+    }
+
+    var actualPayloadLength = payload.length - paddingLength;
+
+    return payload.slice(0, actualPayloadLength);
 };
 	
 Copper.optionNibble = function(value) {
