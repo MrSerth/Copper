@@ -61,6 +61,7 @@
 <script type="application/x-javascript" charset="utf-8" src="chrome://copper/content/Logger.js"/>
 <script type="application/x-javascript" charset="utf-8" src="chrome://copper/content/Main.js"/>
 <script type="text/javascript" src="chrome://copper/content/jssha/src/sha.js"/>
+<script type="text/javascript" src="chrome://copper/content/jsaes/index.js"/>
 
 <panel id="panel_event_log" position="bottomright topright" style="margin-top: 1px;">
 	<textbox id="log_event_log" flex="1" readonly="true" multiline="true" cols="80" rows="50" style="-moz-appearance: none; font-family: monospace; color: lightgray; background-color: black; border: 1px solid white;" />
