@@ -569,22 +569,14 @@ Copper.parse = function(packet) {
 			message.options[optNumber] = new Array(optLen, opt);
 	    	
         } else {
-            //alert("now finding payload");
-            //payload = [82, 95, 115, 234, 24, 253, 210, 78, 162, 189, 148, 103, 42, 42, 99, 53];
-            //decrypted = Copper.decryptPayload(payload);
             if (!payloadIsEncrypted) {
-                alert("payload not encrypted");
-                alert("payload written to message: " + payload);
                 message.payload = packet;
             } else {
-                alert("payload encrypted");
                 // decrypt payload:
                 payload = Copper.decryptPayload(packet);
-                alert("payload written to message: " + payload);
                 message.payload = payload;
             }
-            message.payload = decrypted;
-			
+
 			break;
 		}
     }
@@ -601,24 +593,21 @@ Copper.decryptPayload = function (payload) {
     var psk1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     var psk2 = [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
 
-    // Convert text to bytes
-    // we already have bytes:
-    alert("payload: " + payload);
-    var encryptedBytes = payload; 
+		// create AES Cipher object
+		var aesEcb = new aesjs.ModeOfOperation.ecb(psk1);
 
-    var aesEcb = new aesjs.ModeOfOperation.ecb(psk1);
-    var decryptedBytes = aesEcb.decrypt(encryptedBytes);
+    var encryptedBytes = payload;
 
-    // Convert our bytes back into text
-    var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
-    alert("decrypted text: " + decryptedText);
+		// encrypted payload should always be a multiple of 16 bytes
+		if (payload.length % 16 != 0){
+			return -1;
+		}
+		var decryptedBytes = aesEcb.decrypt(encryptedBytes);
 
-    decryptedUnpaddedPayload = Copper.removePadding(decryptedBytes);
-    var decryptedText = aesjs.utils.utf8.fromBytes(decryptedUnpaddedPayload);
-    alert("decrypted text w/o padding: " + decryptedText);
-
-    return decryptedUnpaddedPayload;
-    
+		decryptedUnpaddedPayload = Copper.removePadding(decryptedBytes);
+		// convert object to array:
+		var arr = Object.keys(decryptedUnpaddedPayload).map(function (key) { return decryptedUnpaddedPayload[key]; });
+    return arr;
 };
 
 Copper.removePadding = function (payload) {
