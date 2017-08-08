@@ -336,7 +336,7 @@
 		<splitter collapse="after" resizebefore="farthest" id="view_debug_split">
 			<grippy />
 		</splitter>
-		<vbox id="sidebar" style="width: 21em;"><!-- 18.5em to avoid scrollbar on Linux -->
+		<vbox id="sidebar" style="width: 25em;"><!-- 18.5em to avoid scrollbar on Linux -->
 			<groupbox flex="1" style="margin-top: -2px;">
 				<caption>
 					<checkbox id="chk_debug_options" label="Debug Control"/>
