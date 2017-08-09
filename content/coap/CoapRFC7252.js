@@ -72,6 +72,12 @@ Copper.__defineGetter__("OPTION_BLOCK2", function() { return 23; });
 Copper.__defineGetter__("OPTION_BLOCK1", function() { return 27; });
 Copper.__defineGetter__("OPTION_SIZE2", function() { return 28; });
 
+Copper.__defineGetter__("OPTION_CLIENT_IDENTITY", function() { return 65000; });
+Copper.__defineGetter__("OPTION_BOOT_COUNTER", function() { return 65001; });
+Copper.__defineGetter__("OPTION_RETRANSMISSION_COUNTER", function() { return 65002; });
+Copper.__defineGetter__("OPTION_HMAC", function() { return 65003; });
+Copper.__defineGetter__("OPTION_ENCRYPTION_ALGORITHM", function() { return 65004; });
+
 Copper.__defineGetter__("EMPTY", function() { return 0; });
 
 Copper.__defineGetter__("GET", function() { return 1; });
@@ -192,30 +198,36 @@ Copper.getOptionName = function(number) {
 	case Copper.OPTION_CONTENT_FORMAT: return 'Content-Format';
 	case Copper.OPTION_MAX_AGE: return 'Max-Age';
 	case Copper.OPTION_ACCEPT: return 'Accept';
-	
+
 	case Copper.OPTION_URI_HOST: return 'Uri-Host';
 	case Copper.OPTION_URI_PORT: return 'Uri-Port';
 	case Copper.OPTION_URI_PATH: return 'Uri-Path';
 	case Copper.OPTION_URI_QUERY: return 'Uri-Query';
-	
+
 	case Copper.OPTION_LOCATION_PATH: return 'Location-Path';
 	case Copper.OPTION_LOCATION_QUERY: return 'Location-Query';
-	
+
 	case Copper.OPTION_PROXY_URI: return 'Proxy-Uri';
 	case Copper.OPTION_PROXY_SCHEME: return 'Proxy-Scheme';
-	
+
 	case Copper.OPTION_IF_MATCH: return 'If-Match';
 	case Copper.OPTION_IF_NONE_MATCH: return 'If-None-Match';
 	case Copper.OPTION_ETAG: return 'ETag';
-	
+
 	case Copper.OPTION_OBSERVE: return 'Observe';
-	
+
 	case Copper.OPTION_BLOCK2: return 'Block2';
 	case Copper.OPTION_BLOCK1: return 'Block1';
-	
+
 	case Copper.OPTION_SIZE2: return 'Size2';
 	case Copper.OPTION_SIZE1: return 'Size1';
-	
+
+	case Copper.OPTION_CLIENT_IDENTITY: return '65000 - Client Identity';
+	case Copper.OPTION_BOOT_COUNTER: return '65001 - Boot Counter';
+	case Copper.OPTION_RETRANSMISSION_COUNTER: return '65002 - Retransmission Counter';
+	case Copper.OPTION_HMAC: return '65003 - HMAC';
+	case Copper.OPTION_ENCRYPTION_ALGORITHM: return '65004 - Encryption Algorithm';
+
 	default: return 'Unknown '+number;
 	}
 };
@@ -259,48 +271,48 @@ Copper.getContentFormatName = function(type) {
 Copper.serialize = function(message) {
 	let byteArray = new Array();
 	let tempByte = 0x00;
-	
+
     // first byte: version, type, and token length
 	tempByte  = (0x03 & Copper.VERSION) << 6; // using const for sending packets
 	tempByte |= (0x03 & message.type) << 4;
 	tempByte |= (0x0F & message.token.length);
-	
+
 	byteArray.push(tempByte);
-	
+
 	// second byte: method or response code
     byteArray.push(0xFF & message.code);
-    
+
     // third and forth byte: message ID (MID)
     byteArray.push(0xFF & (message.mid >>> 8));
     byteArray.push(0xFF & message.mid);
-    
+
     for (let i in message.token) {
     	byteArray.push(0xFF & message.token[i]);
     }
-    
+
     // options
     message.optionCount = 0;
     let optNumber = 0;
-    
+
     for (let optTypeIt in message.options) {
-    	
+
     	if (!Array.isArray(message.options[optTypeIt][1])) {
 			continue;
 		} else {
-			
+
 			Copper.logEvent("SERIALIZE: Option "+Copper.getOptionName(optTypeIt));
-			
+
 			let splitOption = new Array();
 			if (optTypeIt==Copper.OPTION_LOCATION_PATH ||
 				optTypeIt==Copper.OPTION_LOCATION_QUERY ||
 				optTypeIt==Copper.OPTION_URI_PATH ||
 				optTypeIt==Copper.OPTION_URI_QUERY) {
-    			
+
     			let separator = '/'; // 0x002F
     			if (optTypeIt==Copper.OPTION_LOCATION_QUERY || optTypeIt==Copper.OPTION_URI_QUERY) {
     				separator = '&'; // 0x0026
     			}
-			
+
     			if (Copper.bytes2str(message.options[optTypeIt][1])!="") {
 					let splitString = Copper.bytes2str(message.options[optTypeIt][1]).split(separator);
 					for (let s in splitString) {
@@ -311,16 +323,16 @@ Copper.serialize = function(message) {
 			} else {
 				splitOption.push(message.options[optTypeIt][1]);
 			}
-			
+
 			while ((opt = splitOption.shift())) {
-			
+
 				let optDelta = optTypeIt - optNumber;
-			
+
 				let delta = Copper.optionNibble(optDelta);
 				let len = Copper.optionNibble(opt.length);
-				
+
 				byteArray.push(0xFF & (delta<<4 | len));
-				
+
 				if (delta==13) {
 					byteArray.push(optDelta-13);
 				} else if (delta==14) {
@@ -333,25 +345,25 @@ Copper.serialize = function(message) {
 					byteArray.push( (opt.length)>>>8 );
 					byteArray.push( 0xFF & (opt.length-269) );
 				}
-				
+
 				// add option value
 				for (let i in opt) byteArray.push(opt[i]);
-				
+
 				message.optionCount++;
 
 				optNumber = optTypeIt;
 			}
 		}
 	}
-    
+
     // option terminator
     if (message.payload.length>0) {
 		byteArray.push(0xFF);
     }
-	
+
     // serialize as string
     let packet = Copper.bytes2data(byteArray);
-    
+
     // payload
     packet += Copper.bytes2data(message.payload);
 
@@ -397,7 +409,7 @@ Copper.serializeWithoutHMAC = function (message) {
                 Copper.logEvent("now at option 65003");
                 skipValue = true;
             }
-            
+
             let splitOption = new Array();
             if (optTypeIt == Copper.OPTION_LOCATION_PATH ||
                 optTypeIt == Copper.OPTION_LOCATION_QUERY ||
@@ -478,15 +490,15 @@ Copper.serializeWithoutHMAC = function (message) {
         a += b;
         return a;
     });
-    
+
     // finished
     return result;
 };
-	
+
 Copper.parse = function(packet) {
-    
+
 	Copper.logEvent('PACKET (hex): ' + packet.map(function(x){return x.toString(16).toUpperCase();}));
-	
+
 	// first byte: version, type, and option count
 	let tempByte = packet.shift();
 	let tokenLength = parseInt(0x0F & tempByte);
@@ -500,11 +512,11 @@ Copper.parse = function(packet) {
 
 	// create the message
 	var message = new Copper.CoapMessage( 0x03 & ((tempByte) >>> 4), packet.shift() );
-    
+
 	// third and forth byte: message ID (MID)
     message.mid  = packet.shift() << 8;
     message.mid |= packet.shift();
-	
+
     Copper.logEvent("PARSE: Token length = "+tokenLength);
 	for (let i=0; i<tokenLength; ++i) {
 		message.token.push(packet.shift());
@@ -513,12 +525,12 @@ Copper.parse = function(packet) {
 
     // read options
 	let optNumber = 0;
-	
+
 	while ((tempByte = packet.shift())>0) {
 		if (tempByte!=0xFF) {
 			optDelta = ((0xF0 & tempByte) >>> 4);
 	    	optLen = (0x0F & tempByte);
-	    	
+
 	    	if (optDelta==13) {
 	    		optDelta += packet.shift();
 			} else if (optDelta==14) {
@@ -533,41 +545,41 @@ Copper.parse = function(packet) {
 				optLen += packet.shift()<<8;
 				optLen += 0xFF & packet.shift();
 			}
-			
+
             optNumber += optDelta;
-            			
+
 			let opt = new Array(0);
-	    	
+
 		    for (let j=0; j<optLen; j++) {
 		    	opt.push(packet.shift());
             }
-           
+
             if (optNumber == 65004 && opt == 1) {
                 Copper.logEvent("now encryption option with value 1 found.");
                 payloadIsEncrypted = true;
             }
-		    
+
 			Copper.logEvent('PARSE: Option '+Copper.getOptionName(optNumber) + " = " + opt);
-	    	
+
 			// parse Option into Array
 			if (optNumber==Copper.OPTION_LOCATION_PATH ||
     			optNumber==Copper.OPTION_LOCATION_QUERY ||
     			optNumber==Copper.OPTION_URI_PATH ||
     			optNumber==Copper.OPTION_URI_QUERY) {
-    			
+
     			var separator = 0x002F; // /
     			if (optNumber==Copper.OPTION_LOCATION_QUERY || optNumber==Copper.OPTION_URI_QUERY) {
     				separator = 0x0026; // &
     			}
-    			
+
     			if (message.options[optNumber][0]>0) {
     				optLen += 1 + message.options[optNumber][0];
     				opt = message.options[optNumber][1].concat(separator).concat(opt);
     			}
     		}
-			
+
 			message.options[optNumber] = new Array(optLen, opt);
-	    	
+
         } else {
             if (!payloadIsEncrypted) {
                 message.payload = packet;
@@ -580,7 +592,7 @@ Copper.parse = function(packet) {
 			break;
 		}
     }
-	
+
 	return message;
 };
 
@@ -615,7 +627,7 @@ Copper.removePadding = function (payload) {
 
     // Check for correct padding
     var decryptionPaddingError = false;
-    
+
     for (var i = paddingLength; i > 0; --i) {
         if (payload[payload.length - i] != paddingLength) {
             decryptionPaddingError |= true;
@@ -630,7 +642,7 @@ Copper.removePadding = function (payload) {
 
     return payload.slice(0, actualPayloadLength);
 };
-	
+
 Copper.optionNibble = function(value) {
 	if (value < 13) {
 		return (0xFF & value);
@@ -676,11 +688,11 @@ Copper.utf8 = Components.classes['@mozilla.org/preferences-service;1'].getServic
 Copper.str2bytes = function(str) {
 
 	let b = new Array(0);
-	
+
 	if (str!=null) {
 		for (let i=0; i<str.length; i++) {
 			let c = str.charCodeAt(i);
-			
+
 			if (c < 128 || !Copper.utf8) {
 				b.push(0xFF & c);
 			} else if((c > 127) && (c < 2048)) {
@@ -693,7 +705,7 @@ Copper.str2bytes = function(str) {
 			}
 		}
 	}
-	
+
 	return b;
 };
 
@@ -702,9 +714,9 @@ Copper.bytes2str = function(b) {
 	let str = '';
 	var replaced = 0;
 	for (let i=0; i<b.length; ++i) {
-		
+
 		let c = b[i] & 0xFF;
-		
+
 		if (c == 10 || (c >= 32 && c < 127)) {
 			str += String.fromCharCode(c);
 		} else if(Copper.utf8 && c >= 192 && c < 224 && (i+1 < b.length) && (b[i+1] & 0xc0) == 0x80) {
@@ -770,11 +782,11 @@ Copper.hex2bytes = function(h) {
 };
 
 Copper.bytes2hex = function(b) {
-	
+
 	if (!b || !Array.isArray(b) || b.length==0) {
 		return 'empty';
 	}
-	
+
 	var hex = '0x';
 	for (let k in b) {
 		if (b[k]!==undefined) {
@@ -783,7 +795,7 @@ Copper.bytes2hex = function(b) {
 			hex += '--';
 		}
 	}
-	
+
 	return hex;
 };
 
@@ -794,7 +806,7 @@ Copper.str2hex = function(s) {
 	} else {
 		temp = Copper.str2bytes(s);
 	}
-	
+
 	return Copper.bytes2hex(temp);
 };
 
@@ -839,29 +851,29 @@ Copper.double2bytes = function(value) {
 	    case -0.0: hiWord = 0xC0000000; break;
 	    default:
 	        if (Number.isNaN(value)) { hiWord = 0x7FF80000; break; }
-	
+
 	        if (value <= -0.0) {
 	            hiWord = 0x80000000;
 	            value = -value;
 	        }
-	
+
 	        var exponent = Math.floor(Math.log(value) / Math.log(2));
 	        var significand = Math.floor((value / Math.pow(2, exponent)) * Math.pow(2, 52));
-	
+
 	        loWord = significand & 0xFFFFFFFF;
 	        significand /= Math.pow(2, 32);
-	
+
 	        exponent += 1023;
 	        if (exponent >= 0x7FF) {
 	            exponent = 0x7FF;
 	            significand = 0;
 	        } else if (exponent < 0) exponent = 0;
-	
+
 	        hiWord = hiWord | (exponent << 20);
 	        hiWord = hiWord | (significand & ~(-1 << 20));
 	    break;
 	}
-	
+
 	let bytes = new Array(0);
 
 	bytes.unshift( loWord>>24 & 0xFF );
@@ -872,6 +884,6 @@ Copper.double2bytes = function(value) {
 	bytes.unshift( hiWord>>16 & 0xFF );
 	bytes.unshift( hiWord>>8 & 0xFF );
 	bytes.unshift( hiWord>>0 & 0xFF );
-	
+
 	return bytes;
 };

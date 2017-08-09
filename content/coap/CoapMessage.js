@@ -37,7 +37,7 @@
 
 //create a request/ack, received responses use parse()
 Copper.CoapMessage = function(type, code, uri, pl) {
-	
+
 	this.options = new Object();
 	this.options[Copper.OPTION_CONTENT_FORMAT] = new Array(0, null);
 	this.options[Copper.OPTION_MAX_AGE] = new Array(0, null);
@@ -58,28 +58,28 @@ Copper.CoapMessage = function(type, code, uri, pl) {
 	this.options[Copper.OPTION_SIZE2] = new Array(0, null);
 	this.options[Copper.OPTION_SIZE1] = new Array(0, null);
 	this.options[Copper.OPTION_IF_NONE_MATCH] = new Array(0, null);
-	
+
 	this.type = (type!==undefined) ? type : Copper.MSG_TYPE_CON;
 	this.code = (code!==undefined) ? code : Copper.EMPTY;
-	
+
 	this.mid = -1;
 	this.retries = 0;
 	this.token = new Array(0);
-	
+
 	if (uri!==undefined) this.setUri( uri );
 	if (pl!==undefined) {
 		this.setPayload( pl );
 	} else {
 		this.payload = new Array(0);
 	}
-	
+
 	return this;
 };
 
 Copper.CoapMessage.prototype = {
-		
+
 	version : Copper.VERSION,
-	
+
 	// message summary (e.g., for info/debug dumps)
 	getSummary : function() {
 		let ret = '';
@@ -97,8 +97,8 @@ Copper.CoapMessage.prototype = {
 			}
 		}
 		return ret;
-	}, 
-	
+	},
+
 	// readable type
 	getType : function(readable) {
 		if (readable) {
@@ -120,11 +120,11 @@ Copper.CoapMessage.prototype = {
 	isConfirmable : function() {
 		return this.type==Copper.MSG_TYPE_CON;
 	},
-	
+
 	getOptionCount : function() {
 		return this.optionCount;
 	},
-	
+
 	getCode : function(readable) {
 		if (readable) {
 			return Copper.getCodeName(this.code);
@@ -135,14 +135,14 @@ Copper.CoapMessage.prototype = {
 	setCode : function(code) {
 		this.code = code;
 	},
-	
+
 	isRequest: function() {
 		return this.getCode()>=1 && this.getCode()<=31;
 	},
 	isResponse: function() {
 		return this.getCode()>=64;
 	},
-	
+
 	isSuccess: function() {
 		return Math.floor(this.getCode() / 32) == 2;
 	},
@@ -152,7 +152,7 @@ Copper.CoapMessage.prototype = {
 	isServerError: function() {
 		return Math.floor(this.getCode() / 32) == 5;
 	},
-	
+
 	getMID : function() {
 		return this.mid;
 	},
@@ -176,32 +176,32 @@ Copper.CoapMessage.prototype = {
 				token = Copper.str2bytes(token);
 			}
 		}
-		
+
 		while (token.length > Copper.TOKEN_LENGTH) {
 			token.pop();
 			Copper.logEvent('WARNING: Token must be 1-'+Copper.TOKEN_LENGTH+' bytes; cutting to '+Copper.TOKEN_LENGTH+' bytes]');
 		}
-		
+
 		delete this.token;
 		this.token = token;
     },
-	
+
 	// readable options list
 	getOptions : function(asString) {
-		
+
 		if (asString) {
 			let ret = '';
 
 			for (let o in this.options) {
-				
+
 				if (Array.isArray(this.options[o][1])) {
-					
+
 					if (ret!='') ret += ', ';
-					
+
 					let name = Copper.getOptionName(o);
 					let val = this.getOption(o);
 					let info = this.options[o][0];
-					
+
 					switch (parseInt(o)) {
 			    		case Copper.OPTION_BLOCK2:
 			    			val = this.getBlock2Number();
@@ -214,7 +214,7 @@ Copper.CoapMessage.prototype = {
 			    			val += '/'+this.getBlock1Size();
 							break;
 					}
-					
+
 					ret += name + ': ' + val;
 				}
 			}
@@ -222,13 +222,13 @@ Copper.CoapMessage.prototype = {
 			return ret;
 		} else {
 			let ret = new Array();
-			
+
 			for (let o in this.options) {
 		    	if (Array.isArray(this.options[o][1])) {
 		    		var name = Copper.getOptionName(o);
 		    		var value = this.getOption(o);
 		    		var info = this.options[o][0]+' byte' + (this.options[o][0]!=1 ? 's' : '');
-		    		
+
 		    		switch (parseInt(o)) {
 			    		case Copper.OPTION_URI_PATH:
 			    		case Copper.OPTION_LOCATION_PATH:
@@ -257,11 +257,11 @@ Copper.CoapMessage.prototype = {
 							value += ' ('+this.getBlock1Size()+' B/block)';
 							break;
 		    		}
-		    		
+
 		    		ret.push(new Array(name, value, info));
 		    	}
 			}
-			
+
 			return ret;
 		}
 	},
@@ -284,7 +284,7 @@ Copper.CoapMessage.prototype = {
 
 	getOption : function(optNumber) {
 		var opt = this.options[optNumber][1];
-		
+
 		// only set options are arrays
 		if (!Array.isArray(opt)) {
 			return null;
@@ -314,7 +314,7 @@ Copper.CoapMessage.prototype = {
 			case Copper.OPTION_SIZE2:
 			case Copper.OPTION_SIZE1:
 				return Copper.bytes2int(opt);
-			
+
 			// byte arrays
 			case Copper.OPTION_ETAG:
 			case Copper.OPTION_IF_MATCH:
@@ -324,7 +324,7 @@ Copper.CoapMessage.prototype = {
 		}
 		return null;
 	},
-	
+
 	setOption : function(option, value) {
 		switch (parseInt(option)) {
 			// strings
@@ -338,14 +338,14 @@ Copper.CoapMessage.prototype = {
 				this.options[option][0] = value.length;
 				this.options[option][1] = Copper.str2bytes(value);
 				break;
-			
+
 			// byte arrays
 			case Copper.OPTION_ETAG:
 			case Copper.OPTION_IF_MATCH:
 				this.options[option][0] = value.length;
 				this.options[option][1] = value;
 				break;
-				
+
 			// special arrays
 			case -1:
 				this.options[option][0] += 1;
@@ -353,7 +353,7 @@ Copper.CoapMessage.prototype = {
 				this.options[option][1][ this.options[option][0] ] = value;
 				this.options[option][0] += 1;
 				break;
-			
+
 			// integers
 			case Copper.OPTION_CONTENT_FORMAT:
 			case Copper.OPTION_MAX_AGE:
@@ -368,19 +368,19 @@ Copper.CoapMessage.prototype = {
 				this.options[option][1] = Copper.int2bytes(value);
 				this.options[option][0] = this.options[option][1].length;
 				break;
-			
+
 			default:
 				this.options[option] = new Array(value.length, value);
 				Copper.logEvent("WARNING: Setting custom option '"+option+"': "+value);
 		}
 	},
-	
-	
+
+
 	getContentFormat : function(readable) {
 		var opt = this.getOption(Copper.OPTION_CONTENT_FORMAT); // integer
 
 		if (opt==null) return null;
-		
+
 		if (readable) {
 			return new Array(Copper.getContentFormatName(opt), opt);
 		} else {
@@ -394,19 +394,19 @@ Copper.CoapMessage.prototype = {
 			this.setOption(Copper.OPTION_CONTENT_FORMAT, content);
 		}
 	},
-	
+
 	// Copper.OPTION_MAX_AGE:00+
 	getMaxAge : function(readable) {
 		var optLen = this.getOptionLength(Copper.OPTION_MAX_AGE);
 		var opt = this.getOption(Copper.OPTION_MAX_AGE); // integer
-		
+
 		if (opt==null) return null;
 
 		if (readable) {
-			
+
 			var ret = '';
 			var time = opt;
-			
+
 			if (time==0) {
 				ret += '0 ';
 			} else {
@@ -420,10 +420,10 @@ Copper.CoapMessage.prototype = {
 				var d = time % 7;
 				time = Math.floor(time/7);
 				var w = time;
-				
+
 				var y = 0;
 				if (w>104) var y = Math.round(1212424351/60.0/60.0/24.0/365.25*100.0)/100.0;
-				
+
 				// only print from largest to smallest given unit
 				if (w) ret += w+'w ';
 				if (d||(w&&(h||m||s))) ret += d+'d ';
@@ -432,7 +432,7 @@ Copper.CoapMessage.prototype = {
 				if (s) ret += s+'s ';
 				if (y) ret += '(~'+y+'y) ';
 			}
-			
+
 			return new Array(ret.substring(0, ret.length-1), optLen+' byte(s)');
 		} else {
 			return opt;
@@ -445,7 +445,7 @@ Copper.CoapMessage.prototype = {
 		}
 		this.setOption(Copper.OPTION_MAX_AGE, age);
 	},
-	
+
 	// Copper.OPTION_PROXY_URI:04+
 	getProxyUri : function(readable) {
 		return this.getOption(Copper.OPTION_PROXY_URI); // string
@@ -453,7 +453,7 @@ Copper.CoapMessage.prototype = {
 	setProxyUri : function(proxy) {
 		this.setOption(Copper.OPTION_PROXY_URI, proxy);
 	},
-	
+
 	// Copper.OPTION_PROXY_URI:04+
 	getProxyScheme : function(readable) {
 		return this.getOption(Copper.OPTION_PROXY_SCHEME); // string
@@ -461,13 +461,13 @@ Copper.CoapMessage.prototype = {
 	setProxyScheme : function(scheme) {
 		this.setOption(Copper.OPTION_PROXY_SCHEME, scheme);
 	},
-	
+
 	// Copper.OPTION_ETAG:00+
 	getETag : function() {
 		return this.getOption(Copper.OPTION_ETAG); // byte array
 	},
 	setETag : function(tag) {
-		
+
 		if (!Array.isArray(tag)) {
 			Copper.logEvent('INFO: Converting ETag to byte array');
 			if (tag.substr(0,2)=='0x') {
@@ -476,15 +476,15 @@ Copper.CoapMessage.prototype = {
 				tag = Copper.str2bytes(tag);
 			}
 		}
-		
+
 		if (tag.length>Copper.ETAG_LENGTH) {
 			Copper.logWarning('Reducing ETag from '+tag.length+' to '+Copper.ETAG_LENGTH+' bytes.');
 			tag = tag.slice(0, Copper.ETAG_LENGTH-1);
 		}
-		
+
 		this.setOption(Copper.OPTION_ETAG, tag);
 	},
-	
+
 	// Copper.OPTION_URI_HOST:04+ / Copper.OPTION_URI_AUTH:03*renamed
 	getUriHost : function() {
 		return this.getOption(Copper.OPTION_URI_HOST); // string
@@ -512,16 +512,16 @@ Copper.CoapMessage.prototype = {
 	},
 	// convenience function
 	getUri : function(readable) {
-		
+
 		let host = this.getUriHost();
 		let port = this.getUriPort();
 		let path = this.getUriPath();
 		let query = this.getUriQuery();
-		
+
 		let uri = '';
 		let decoded = 0;
 		let multiple = null;
-		
+
 		if (host) {
 			uri += 'coap://' + host;
 			++decoded;
@@ -542,19 +542,19 @@ Copper.CoapMessage.prototype = {
 		}
 
 		if (decoded<=0) return null;
-		
+
 		if (readable) {
 			return new Array('Uri', uri, decoded+(decoded==1 ? ' option' : ' options'));
 		} else {
 			return uri;
 		}
-	}, 
+	},
 	setUri : function(inputUri) {
-		
+
 		var uri = document.createElementNS("http://www.w3.org/1999/xhtml","a");
 /*
  * <a> tag as parser:
- * 
+ *
  *		parser.protocol; // => "http:"
  *		parser.hostname; // => "example.com"
  *		parser.port; // => "3000"
@@ -564,7 +564,7 @@ Copper.CoapMessage.prototype = {
  *		parser.host; // => "example.com:3000"
  */
 		uri.href = inputUri;
-		
+
 		if (uri.hostname!='' // set
 			&& Copper.behavior.sendUriHost // enabled
 			&& !uri.hostname.match(/^[0-9]{1,3}(\.[0-9]{1,3}){3}$/) // no IPv4 literal
@@ -578,17 +578,17 @@ Copper.CoapMessage.prototype = {
 			this.setOption(Copper.OPTION_URI_QUERY, uri.search.substr(1));
 		}
 	},
-	
+
 	// multiple Copper.OPTION_LOCATION_PATH:04+ / Copper.OPTION_LOCATION:03*renamed
 	getLocationPath : function() {
 		// multiple Copper.OPTION_LOCATION_PATH options should be concatinated during datagram parsing
 		// TODO: maybe use a string array later
-		
+
 		return this.getOption(Copper.OPTION_LOCATION_PATH); // string
 	},
 	setLocationPath : function(path) {
 		while (path.charAt(0)=='/') path = path.substr(1);
-		
+
 		this.setOption(Copper.OPTION_LOCATION_PATH, path);
 	},
 	// Copper.OPTION_LOCATION_QUERY:05+
@@ -597,23 +597,23 @@ Copper.CoapMessage.prototype = {
 	},
 	setLocationQuery : function(query) {
 		while (query.charAt(0)=='?') query = query.substr(1);
-		
+
 		this.setOption(Copper.OPTION_LOCATION_QUERY, query);
 	},
 	// convenience function
 	getLocation : function(readable) {
 		var optLen = this.getOptionLength(Copper.OPTION_LOCATION_PATH);
 		var opt = this.getOption(Copper.OPTION_LOCATION_PATH); // string
-		
+
 		var optLen2 = 0;
-		
+
 		if (this.getOptionLength(Copper.OPTION_LOCATION_QUERY)) {
 			opt += '?' + this.getOption(Copper.OPTION_LOCATION_QUERY);
 			optLen2 = this.getOptionLength(Copper.OPTION_LOCATION_QUERY);
 		}
-		
+
 		if (optLen+optLen2<=0) return null;
-		
+
 		if (readable) {
 			var multiple = opt.match(/\/|&/g);
 			var decoded = 1 + (multiple!=null ? multiple.length : 0) + (optLen2>0 ? 1 : 0);
@@ -624,7 +624,7 @@ Copper.CoapMessage.prototype = {
 			return opt;
 		}
 	},
-	
+
 	// Copper.OPTION_ACCEPT:07+
 	getAccept : function() {
 		return this.getOption(Copper.OPTION_ACCEPT); // integer
@@ -636,7 +636,7 @@ Copper.CoapMessage.prototype = {
 			this.setOption(Copper.OPTION_ACCEPT, content);
 		}
 	},
-	
+
 	// Copper.OPTION_IF_MATCH:07+
 	getIfMatch : function() {
 		return this.getOption(Copper.OPTION_IF_MATCH); // byte array
@@ -650,38 +650,38 @@ Copper.CoapMessage.prototype = {
 				tag = Copper.str2bytes(tag);
 			}
 		}
-		
+
 		while (tag.length>Copper.ETAG_LENGTH) {
 			Copper.logWarning('Reducing ETag from '+tag.length+' to '+Copper.ETAG_LENGTH+' bytes.');
 			tag = tag.slice(0, Copper.ETAG_LENGTH-1);
 		}
 		this.setOption(Copper.OPTION_IF_MATCH, tag);
 	},
-	
+
 	// Copper.OPTION_BLOCK2:06+ / Copper.OPTION_BLOCK:03+
 	getBlock2 : function(readable) {
 		var opt = this.getOption(Copper.OPTION_BLOCK2); // integer
 
 		if (opt==null) return null;
-		
+
 		if (readable) {
 			var ret = this.getBlock2Number();
 			if (this.getBlock2More()) ret += '+';
 			ret += ' ('+this.getBlock2Size()+' B/block)';
-			
+
 			return ret;
 		} else {
 			return opt;
 		}
 	},
 	setBlock2 : function(num, size, more) {
-				
+
 		if (size!==undefined) {
-		
+
 			let block = num << 4;
-			
+
 			let szx = 0;
-			
+
 			// check for power of two and correct size
 			if (!Copper.isPowerOfTwo(size)) {
 				Copper.logEvent('INFO: Block2 size '+size+' not a power of two; using next smaller power.');
@@ -694,18 +694,18 @@ Copper.CoapMessage.prototype = {
 				size = 1024;
 				Copper.logEvent('INFO: Block2 size must be <=1024; using 1024.');
 			}
-			
+
 			// size encoding
 			size >>= 4;
 			for (szx = 0; size; ++szx) size >>= 1;
 			block |= (szx - 1);
-			
+
 			if (more!==undefined) {
 				block |= more ? 0x08 : 0x00;
 			}
-			
+
 			this.setOption(Copper.OPTION_BLOCK2, block);
-			
+
 		} else {
 			this.setOption(Copper.OPTION_BLOCK2, num);
 		}
@@ -723,18 +723,18 @@ Copper.CoapMessage.prototype = {
 	getBlock2Offset : function() {
 		return this.getBlock2Size() * (this.getBlock2Number() + 1);
 	},
-	
+
 	// Copper.OPTION_BLOCK1:06+
 	getBlock1 : function(readable) {
 		var opt = this.getOption(Copper.OPTION_BLOCK1); // integer
 
 		if (opt==null) return null;
-		
+
 		if (readable) {
 			var ret = this.getBlock1Number();
 			if (this.getBlock1More()) ret += '+';
 			ret += ' ('+this.getBlock1Size()+' B/block)';
-			
+
 			return ret;
 		} else {
 			return opt;
@@ -743,7 +743,7 @@ Copper.CoapMessage.prototype = {
 	setBlock1 : function(num, size, more) {
 		let block = num << 4;
 		let szx = 0;
-		
+
 		// check for power of two and correct size
 		if (!Copper.isPowerOfTwo(size)) {
 			Copper.logEvent('INFO: Block1 size '+size+' not a power of two; using next smaller power.');
@@ -756,14 +756,14 @@ Copper.CoapMessage.prototype = {
 			size = 1024;
 			Copper.logEvent('INFO: Block1 size must be <=1024; using 1024.');
 		}
-		
+
 		size >>= 4;
 		for (szx = 0; size; ++szx) size >>= 1;
 		block |= szx - 1;
 		if (more) {
 			block |= 0x08;
 		}
-		
+
 		this.setOption(Copper.OPTION_BLOCK1, block);
 	},
 	// convenience functions for block option parts
@@ -802,7 +802,7 @@ Copper.CoapMessage.prototype = {
 			this.setOption(Copper.OPTION_SIZE1, num);
 		}
 	},
-	
+
 	// Copper.OPTION_IF_NONE_MATCH:07+
 	getIfNoneMatch : function() {
 		var opt = this.getOption(Copper.OPTION_IF_NONE_MATCH); // byte array
@@ -822,9 +822,9 @@ Copper.CoapMessage.prototype = {
 		if (num> 0xFFFFFF) num = num % 0xFFFFFF;
 		this.setOption(Copper.OPTION_OBSERVE, num);
 	},
-	
+
 	setCustom : function(num, value) {
-		if (Copper.getOptionName(num).match(/^Unknown/)) {
+		if (Copper.getOptionName(num).match(/^Unknown/) || num >= 65000) {
 			if (value.substr(0,2)=='0x') {
 				this.setOption(parseInt(num), Copper.hex2bytes(value));
 			} else {
@@ -834,7 +834,7 @@ Copper.CoapMessage.prototype = {
 			throw new Error('Cannot set '+Copper.getOptionName(num)+' as custom option');
 		}
 	},
-	
+
 	// payload functions
 	getPayload : function() {
 		return this.payload;
@@ -851,7 +851,7 @@ Copper.CoapMessage.prototype = {
 	},
 	isPrintable : function(ct) {
 		if (ct==null) ct = this.getContentFormat();
-		
+
 		switch (ct) {
 			case Copper.CONTENT_TYPE_TEXT_PLAIN:
 			case Copper.CONTENT_TYPE_TEXT_XML:
@@ -869,7 +869,7 @@ Copper.CoapMessage.prototype = {
 			case Copper.CONTENT_TYPE_APPLICATION_VND_OMA_LWM2M_JSON:
 			case null:
 				return true;
-				
+
 			case Copper.CONTENT_TYPE_IMAGE_GIF:
 			case Copper.CONTENT_TYPE_IMAGE_JPEG:
 			case Copper.CONTENT_TYPE_IMAGE_PNG:
@@ -887,35 +887,35 @@ Copper.CoapMessage.prototype = {
 				return false;
 		}
 	},
-	
-	
+
+
 	// convert message into datagram bytes
 	serialize : function() {
 		return Copper.serialize();
 	},
-	
+
 	// convert datagram bytes into message
 	parse : function(datagram) {
 		this.parse(datagram);
 	},
-	
+
 	getRetries : function() {
 		return this.retries;
 	},
-	
+
 	incRetries : function() {
 		++this.retries;
 	},
-	
-	// maybe more arguments needed 
+
+	// maybe more arguments needed
 	respond : function(code, payload, format) {
 		this.reply = new CoapMessage(Copper.MSG_TYPE_ACK, code, null, payload);
 		this.reply.setMID(this.getMID());
 		this.reply.setToken(this.getToken());
-		
+
 		if (format) this.reply.setContentType(format);
 	},
-	
+
 	getReply : function() {
 		return this.reply;
 	}
