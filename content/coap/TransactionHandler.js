@@ -38,32 +38,32 @@
 Copper.Transaction = function(myMessage, myTimer) {
 	this.message = myMessage;
 	this.timer = myTimer;
-	
+
 	this.rttStart = new Date().getTime();
-	
+
 	return this;
 };
 Copper.Transaction.prototype = {
 	message : null,
 	timer : null,
-	
+
 	rttStart : 0
 };
 
 Copper.TransactionHandler = function(myClient) {
-	
+
 	this.client = myClient;
 	this.client.register( Copper.myBind(this, this.handle) );
-	
+
 	this.midGenerator = parseInt(Math.random()*0x10000);
-	
+
 	this.transactions = new Object();
 	this.requests = new Object();
 	this.registeredTokens = new Object();
 	this.registeredMIDs = new Object();
 	this.dupFilter = new Array();
 	this.dupCache = new Object();
-	
+
 	return this;
 };
 
@@ -73,26 +73,26 @@ Copper.TransactionHandler.prototype = {
 
 	client : null,
 	defaultCB : null,
-	
+
 	transactions : null,
-	
+
 	requests : null,
 	registeredTokens : null,
 	registeredMIDs : null,
-	
+
 	dupFilter : null,
 	dupCache : null,
-	
+
 	registerCallback : function(myCB) {
 		this.defaultCB = myCB;
 	},
-	
+
 	nextMID : function() {
 		this.midGenerator = (this.midGenerator+1) % 0x10000;
 		//return Math.pow(2, this.midGenerator) % 419;
 		return this.midGenerator;
 	},
-	
+
 	stopRetransmission : function(token) {
 		for (let mid in this.transactions) {
 			if (this.transactions[mid].message.getToken()==token) {
@@ -104,7 +104,7 @@ Copper.TransactionHandler.prototype = {
 			}
 		}
 	},
-	
+
 	stopRetransmissions : function() {
 		for (let mid in this.transactions) {
 			if (this.transactions[mid].timer) {
@@ -114,22 +114,22 @@ Copper.TransactionHandler.prototype = {
 			delete this.transactions[mid];
 		}
 	},
-	
+
 	cancelTransactions : function() {
 		this.stopRetransmissions();
-		
+
 		this.requests = new Object();
 		this.registeredTokens = new Object();
 		this.registeredMIDs = new Object();
-		
+
 		Copper.observer.clean();
 	},
-	
+
 	registerToken : function(token, cb) {
 		Copper.logEvent('INFO: Registering token '+token);
 		this.registeredTokens[token] = cb;
 	},
-	
+
 	deRegisterToken : function(token) {
 		if (this.registeredTokens[token]) {
 			Copper.logEvent('INFO: Deregistering token '+token);
@@ -139,104 +139,106 @@ Copper.TransactionHandler.prototype = {
 			if (this.registeredTokens[i]) Copper.logEvent('  '+i);
 		}
 	},
-	
+
 	send : function(message, reqCB) {
-		
+
 		if (this.client.ended) return;
-		
+
 		// set MID for message
 		if (message.getMID()==-1) {
 			message.setMID( this.nextMID() );
 		}
-		
+
 		var that = this; // coping with the JavaScript scope...
 		var timer = null;
-		
+
 		// store reliable transaction
 		if (message.isConfirmable()) {
 			if (Copper.behavior.retransmissions) {
 				// schedule resend without RANDOM_FACTOR since we already have human jitter
 				timer = window.setTimeout(function(){Copper.myBind(that,that.resend(message.getMID()));}, Copper.RESPONSE_TIMEOUT);
 			} else {
-				// also schedule 'not responding' timeout when retransmissions are disabled 
+				// also schedule 'not responding' timeout when retransmissions are disabled
 				timer = window.setTimeout(function(){Copper.myBind(that,that.resend(message.getMID()));}, 16000); // 16 seconds
 			}
 			Copper.logEvent('INFO: Storing MID '+ message.getMID());
 			this.transactions[message.getMID()] = new Copper.Transaction(message, timer);
 		}
-		
+
 		// store request callback through token matching
 		if (message.isRequest()) {
-			
+
 			while (this.requests[message.getToken()]!=null && this.registeredTokens[message.getToken()]==null) {
 				Copper.logEvent('INFO: Default token already in use');
 				message.setToken([parseInt(Math.random()*0x100), parseInt(Math.random()*0x100)]);
 			}
 			this.requests[message.getToken()] = reqCB===undefined ? this.defaultCB : reqCB;
-			
+
 			// also save callback by MID
 			this.registeredMIDs[message.getMID()] = this.requests[message.getToken()];
-		
+
 		// store notification (needed for NON)
 		} else if (message.isResponse() && message.getObserve()!=null) {
 			this.registeredMIDs[message.getMID()] = reqCB;
-		
+
 		// store ping
 		} else if (message.getType()==Copper.MSG_TYPE_CON && message.getCode()==0) {
 			this.registeredMIDs[message.getMID()] = reqCB;
 		}
 
+		Copper.checkDebugOptions(message);
+
+    // calc HMAC now, that the message is complete
+    packetHex = Copper.serializeWithoutHMAC(message);
+
+    psk1 = "000102030405060708090A0B0C0D0E0F";
+    psk2 = "0F0E0D0C0B0A09080706050403020100";
+    var shaObj = new jsSHA("SHA-256", "HEX");
+    shaObj.setHMACKey(psk1, "HEX");
+    shaObj.update(packetHex);
+    hmac = shaObj.getHMAC("HEX");
+
+    // cut HMAC to only first 8 B
+    shortHMAC = hmac.substring(0, 16);
+    hexShortHmac = "0x" + shortHMAC;
+    Copper.serialize(message);
+    // replace dummy hmac with actual value (add 0x to make sure it's interpreted as hex-value)
+    message.setCustom(document.getElementById('debug_option_hmac_number').value, hexShortHmac);
+
 		Copper.logMessage(message, true);
 
-        // calc HMAC now, that the message is complete
-        packetHex = Copper.serializeWithoutHMAC(message);
-        
-        psk1 = "000102030405060708090A0B0C0D0E0F";
-        psk2 = "0F0E0D0C0B0A09080706050403020100";
-        var shaObj = new jsSHA("SHA-256", "HEX");
-        shaObj.setHMACKey(psk1, "HEX");
-        shaObj.update(packetHex);
-        hmac = shaObj.getHMAC("HEX");
-        
-        // cut HMAC to only first 8 B
-        shortHMAC = hmac.substring(0, 16);
-        hexShortHmac = "0x" + shortHMAC;
-        Copper.serialize(message);
-        // replace dummy hmac with actual value (add 0x to make sure it's interpreted as hex-value)
-        message.setCustom(document.getElementById('debug_option_hmac_number').value, hexShortHmac);
-        
         // reserialize message now with new hmac
 		this.client.send( Copper.serialize(message) );
 	},
-	
+
 	resend : function(mid) {
 		if (Copper.behavior.retransmissions && this.transactions[mid]!==undefined && (this.transactions[mid].message.getRetries() < Copper.MAX_RETRANSMIT)) {
-			
+
 			var that = this;
 			this.transactions[mid].message.incRetries();
-			
+
 			var timeout = Copper.RESPONSE_TIMEOUT*Math.pow(2,this.transactions[mid].message.getRetries());
 			this.transactions[mid].timer = window.setTimeout(function(){Copper.myBind(that,that.resend(mid));}, timeout);
-			
+
 			Copper.logMessage(this.transactions[mid].message, true);
-			
+
 			this.client.send( Copper.serialize(this.transactions[mid].message) );
-			
+
 			Copper.popup(Copper.hostname+':'+Copper.port, 'Re-transmitting message '+mid+' ('+this.transactions[mid].message.getRetries()+'/'+Copper.MAX_RETRANSMIT+')');
-		
+
 		} else {
 			Copper.logWarning('Message ' + mid + ' timed out.');
 			this.cancelTransactions();
 			delete this.transactions[mid];
 		}
 	},
-	
+
 	handle : function(datagram) {
 		// parse byte message to CoAP message
 		let message = Copper.parse(datagram);
-		
+
 		Copper.logMessage(message, false);
-		
+
 		if (this.transactions[message.getMID()]) {
 			// calculate round trip time
 			var ms = (new Date().getTime() - this.transactions[message.getMID()].rttStart);
@@ -246,13 +248,13 @@ Copper.TransactionHandler.prototype = {
 			// stop retransmission
 			Copper.logEvent('INFO: Closing MID ' + message.getMID() );
 			if (this.transactions[message.getMID()].timer) window.clearTimeout(this.transactions[message.getMID()].timer);
-			
+
 			// clear transaction
 			delete this.transactions[message.getMID()];
-			
+
 		// filter duplicates
 		} else if (this.dupFilter.indexOf(message.getMID()) != -1) {
-			
+
 			if (message.getType()==Copper.MSG_TYPE_CON) {
 				var reply = this.dupCache[message.getMID()];
 				if (reply) {
@@ -266,25 +268,25 @@ Copper.TransactionHandler.prototype = {
 				Copper.logEvent('INFO: Ignoring duplicate (Message ID: '+message.getMID()+')');
 			}
 			return;
-		
+
 		// implicit acknowledgement
 		} else if (message.isResponse()) {
-			
+
 		}
 
 		// callback for message
 		var callback = null;
-			
+
 		// Requests
 		if (message.isRequest()) {
-			
+
 			callback = null;
-			
+
 		// Responses
 		} else if (message.isResponse()) {
 			// request matching by token
 			if (this.requests[message.getToken()]) {
-				
+
 				// separate response
 				if (!this.registeredMIDs[message.getMID()]) {
 					if (message.getType()==Copper.MSG_TYPE_CON || message.getType()==Copper.MSG_TYPE_NON) {
@@ -293,46 +295,46 @@ Copper.TransactionHandler.prototype = {
 						this.stopRetransmission(message.getToken());
 					}
 				}
-				
+
 				callback = this.requests[message.getToken()];
-				
+
 				delete this.requests[message.getToken()];
 				delete this.registeredMIDs[message.getMID()];
-			
+
 			// check registered Tokens, e.g., subscriptions
 			} else if (this.registeredTokens[message.getToken()]) {
 				callback = this.registeredTokens[message.getToken()];
-			
+
 			// error
 			} else {
 				Copper.logEvent('INFO: Received unknown token');
-				
+
 				if (Copper.behavior.showUnknown) {
 					// hack for additional info
 					message.getCopperCode = function() { return 'Unknown token'; };
 					this.defaultCB(message);
 				}
-				
+
 				if (Copper.behavior.rejectUnknown && (message.getType()==Copper.MSG_TYPE_CON || message.getType()==Copper.MSG_TYPE_NON)) {
 					Copper.logEvent('INFO: Rejecting unknown token');
 					this.reset(message.getMID());
 				}
-				
+
 				return;
 			}
-			
+
 		// Empty messages
 		} else {
 			callback = this.registeredMIDs[message.getMID()];
-			
+
 			delete this.registeredMIDs[message.getMID()];
-			
+
 			// separate response
 			if (message.getType()==Copper.MSG_TYPE_ACK && message.getCode()==Copper.EMPTY) {
 				message.getCopperCode = function() { return 'Separate response inbound'; };
 			}
 		}
-		
+
 		// callback might set reply for message used by deduplication
 		if (callback) {
 			try {
@@ -342,14 +344,14 @@ Copper.TransactionHandler.prototype = {
 				Copper.logError(ex);
 			}
 		}
-		
+
 		// piggyback response or ack received CON messages
 		if (message.reply) {
 			this.send(message.reply);
 		} else if (message.getType()==Copper.MSG_TYPE_CON) {
 			this.ack(message.getMID());
 		}
-		
+
 		// add to duplicates filter
 		if (message.getType()!=Copper.MSG_TYPE_RST) {
 			this.dupFilter.unshift(message.getMID());
@@ -359,21 +361,21 @@ Copper.TransactionHandler.prototype = {
 			}
 		}
 	},
-	
+
 	ack : function(mid) {
 		var ack = new Copper.CoapMessage(Copper.MSG_TYPE_ACK);
 		ack.setMID( mid );
 		Copper.popup(Copper.hostname+':'+Copper.port, 'Sending ACK for message '+mid);
 		this.send( ack );
 	},
-	
+
 	reset : function(mid) {
 		var rst = new Copper.CoapMessage(Copper.MSG_TYPE_RST);
 		rst.setMID( mid );
 		Copper.popup(Copper.hostname+':'+Copper.port, 'Sending RST for message '+mid);
 		this.send( rst );
 	},
-	
+
 	shutdown : function() {
 		this.client.shutdown();
 	}
